@@ -9,7 +9,7 @@
 html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
 body{background:linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 30%,#16213e 100%);color:#e8dcc8;display:flex;justify-content:center;align-items:center}
 #app{width:100%;max-width:480px;height:100vh;height:100dvh;position:relative;overflow:hidden}
-.scene{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2.2rem 1.8rem;opacity:0;transform:translateY(24px);transition:opacity 0.9s ease,transform 0.9s ease;pointer-events:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2.2rem 1.8rem;opacity:0;transform:translateY(24px);transition:opacity 1.4s ease,transform 1.4s ease;pointer-events:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .scene.active{opacity:1;transform:translateY(0);pointer-events:auto}
 .scene.exit{opacity:0;transform:translateY(-24px);pointer-events:none}
 .moon{font-size:2.6rem;margin-bottom:1rem;filter:drop-shadow(0 0 24px rgba(232,184,75,0.25))}
@@ -66,18 +66,23 @@ body{background:linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 30%,#16213e 100%);colo
 </head>
 <body>
 
-<audio id="bgm" loop preload="auto"><source src="music.mp3" type="audio/mpeg"></audio>
 <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵</button>
 <div class="toast" id="toast"></div>
 <div id="app"></div>
 
 <script>
+// 动态创建audio元素，避免HTML标签在微信浏览器中渲染异常字符
+(function(){
+  const a=document.createElement('audio');
+  a.id='bgm';a.loop=true;a.preload='auto';a.src='music.mp3';
+  document.body.appendChild(a);
+})();
 let musicStarted=false;
 function tryStartMusic(){
   if(musicStarted)return;
   const a=document.getElementById('bgm');
   if(!a||!a.src)return;
-  a.volume=0.35;
+  a.volume=0.12;
   a.play().then(()=>{
     musicStarted=true;
     document.getElementById('musicBtn').classList.add('on');
@@ -88,7 +93,7 @@ function toggleMusic(){
   const btn=document.getElementById('musicBtn');
   if(!a)return;
   if(a.paused){
-    a.volume=0.35;
+    a.volume=0.12;
     a.play().then(()=>{btn.classList.add('on')}).catch(()=>{});
   }else{
     a.pause();btn.classList.remove('on');
@@ -314,7 +319,7 @@ ${makeReport()}
 <div style="height:1.5rem"></div>
 <button class="btn-ghost" id="${btnId}" onclick="go(step+1)">${d.btn||'继续'}</button>
 </div>`;
-    setTimeout(()=>{const b=document.getElementById(btnId);if(b)b.classList.add('show')},2800);
+    setTimeout(()=>{const b=document.getElementById(btnId);if(b)b.classList.add('show')},3600);
   }else{
     let head='';
     if(d.act) head=`<div class="act-label">${d.act}</div><div class="act-title">${d.actTitle}</div><div class="divider"></div><div class="act-sub">${fmt(d.actSub)}</div>`;
@@ -325,11 +330,12 @@ ${head}
 <div class="scene-text">${fmt(d.body)}</div>
 <div class="question">${fmt(d.q)}</div>
 ${opts}
+<p style="color:#6a6358;font-size:0.72rem;text-align:center;margin-top:1.2rem;letter-spacing:0.1em">第一感觉 往往比答案更诚实</p>
 </div>`;
   }
 
   const old=app.querySelector('.scene.active');
-  if(old){old.classList.remove('active');old.classList.add('exit');setTimeout(()=>old.remove(),900)}
+  if(old){old.classList.remove('active');old.classList.add('exit');setTimeout(()=>old.remove(),1400)}
   app.insertAdjacentHTML('beforeend',h);
   step=idx;
 }
@@ -393,4 +399,5 @@ function submitData(r,name){
 
 go(0);
 </script>
-</
+</body>
+</html>
