@@ -52,13 +52,58 @@ body{background:linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 30%,#16213e 100%);colo
 .tag-desc{font-size:0.82rem;color:#7a7568;line-height:1.5}
 .copy-btn{display:inline-block;padding:0.4rem 1rem;border:1px solid rgba(232,184,75,0.3);border-radius:6px;background:rgba(232,184,75,0.08);color:#e8c170;font-size:0.78rem;cursor:pointer;margin-top:0.5rem;letter-spacing:0.05em}
 .copy-btn:active{background:rgba(232,184,75,0.2)}
+.share-btn{display:inline-block;padding:0.45rem 1.1rem;border:1px solid rgba(232,184,75,0.18);border-radius:8px;background:rgba(232,184,75,0.05);color:#9a9288;font-size:0.78rem;cursor:pointer;margin-top:0.8rem;letter-spacing:0.06em;transition:all 0.3s}
+.share-btn:hover{border-color:rgba(232,184,75,0.3);color:#e8c170;background:rgba(232,184,75,0.1)}
+.share-btn:active{transform:scale(0.97)}
+.music-btn{position:fixed;top:1rem;right:1rem;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid rgba(232,184,75,0.15);background:rgba(13,13,26,0.7);color:#5a5548;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);line-height:1}
+.music-btn:hover{border-color:rgba(232,184,75,0.35);color:#e8c170}
+.music-btn.on{color:#e8c170;border-color:rgba(232,184,75,0.3)}
 .hl{color:#e8c170;font-size:1.05em;font-weight:500}
 .hidden{display:none}
+.toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:rgba(232,184,75,0.12);color:#e8c170;padding:0.6rem 1.4rem;border-radius:8px;font-size:0.78rem;letter-spacing:0.05em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;opacity:0;transition:opacity 0.4s;pointer-events:none;border:1px solid rgba(232,184,75,0.15)}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
+
+<audio id="bgm" loop preload="auto"><source src="music.mp3" type="audio/mpeg"></audio>
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵</button>
+<div class="toast" id="toast"></div>
 <div id="app"></div>
+
 <script>
+let musicStarted=false;
+function tryStartMusic(){
+  if(musicStarted)return;
+  const a=document.getElementById('bgm');
+  if(!a||!a.src)return;
+  a.volume=0.35;
+  a.play().then(()=>{
+    musicStarted=true;
+    document.getElementById('musicBtn').classList.add('on');
+  }).catch(()=>{});
+}
+function toggleMusic(){
+  const a=document.getElementById('bgm');
+  const btn=document.getElementById('musicBtn');
+  if(!a)return;
+  if(a.paused){
+    a.volume=0.35;
+    a.play().then(()=>{btn.classList.add('on')}).catch(()=>{});
+  }else{
+    a.pause();btn.classList.remove('on');
+  }
+}
+// 用户首次交互时启动音乐
+document.addEventListener('click',function(){tryStartMusic()},{once:false});
+document.addEventListener('touchstart',function(){tryStartMusic()},{once:false});
+
+function showToast(msg,dur){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur||2000);
+}
+
 function stripP(s){
   return s.replace(/[\u3002\uff0c\u3001\uff1b\uff01\u2014\u2026\u300a\u300b\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011.,;!?~\-—\u00b7\u30fb\u2022]/g,'');
 }
@@ -173,7 +218,6 @@ function makeReport(){
   const r=calc();
   const name=userName||'你';
   const rp=RP[r.primary];
-  // 上报数据到飞书多维表格
   try{submitData(r,name)}catch(e){}
   let bars='';
   KEYS.forEach(k=>{
@@ -258,6 +302,8 @@ ${makeReport()}
 <p style="color:#5a5548;font-size:0.75rem;text-align:center;margin:0.5rem 0;letter-spacing:0.05em">打开微信 搜索添加</p>
 <p style="color:#e8c170;font-size:1.05rem;letter-spacing:0.15em;margin:0.4rem 0;text-align:center;font-weight:500">${d.wx}</p>
 <button class="copy-btn" onclick="copyWx()">复制微信号</button>
+<div style="height:0.5rem"></div>
+<button class="share-btn" onclick="shareLink()">送TA一次看见自己的机会</button>
 <p style="color:#3a3530;font-size:0.7rem;text-align:center;margin-top:1.5rem;letter-spacing:0.08em">薇光跃迁显影师 · 等你</p>
 </div>`;
   }else if(d.trans!==undefined){
@@ -311,6 +357,20 @@ function showCopyOk(){
   if(b){b.textContent='已复制 ✓';setTimeout(()=>{b.textContent='复制微信号'},1500)}
 }
 
+function shareLink(){
+  const url=location.href;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>{
+      showToast('链接已复制 去微信发给朋友吧 ✨',2500);
+    }).catch(()=>fallbackCopy(url));
+  }else{fallbackCopy(url)}
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  showToast('链接已复制 去微信发给朋友吧 ✨',2500);
+}
+
 function submitData(r,name){
   const payload={
     "用户姓名":name,
@@ -324,7 +384,7 @@ function submitData(r,name){
     "薇光LIGHT":r.pct.LIGHT,
     "薇生ASCENT":r.pct.ASCENT
   };
-  fetch('https://lark-cli-proxy.vercel.app/api/submit',{
+  fetch('https://submit-proxy-feishu8-zep4.vercel.app/api/submit',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(payload)
@@ -333,5 +393,4 @@ function submitData(r,name){
 
 go(0);
 </script>
-</body>
-</html>
+</
