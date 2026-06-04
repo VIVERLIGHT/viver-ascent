@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌗 人生状态显影</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+body{background:linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 30%,#16213e 100%);color:#e8dcc8;display:flex;justify-content:center;align-items:center}
+#app{width:100%;max-width:480px;height:100vh;height:100dvh;position:relative;overflow:hidden}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2.2rem 1.8rem;opacity:0;transform:translateY(24px);transition:opacity 0.9s ease,transform 0.9s ease;pointer-events:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scene.active{opacity:1;transform:translateY(0);pointer-events:auto}
+.scene.exit{opacity:0;transform:translateY(-24px);pointer-events:none}
+.moon{font-size:2.6rem;margin-bottom:1rem;filter:drop-shadow(0 0 24px rgba(232,184,75,0.25))}
+.title{font-size:1.25rem;font-weight:600;color:#e8c170;letter-spacing:0.18em;margin-bottom:1.2rem;text-align:center}
+.text{font-size:0.95rem;line-height:2.6;color:#d4cbb8;text-align:center;white-space:pre-line;margin-bottom:0.6rem}
+.text-group{margin-bottom:1.4rem}
+.divider{width:40px;height:2px;background:linear-gradient(90deg,transparent,#e8c170,transparent);margin:0.8rem auto;opacity:0.7}
+.input-wrap{width:100%;max-width:260px;margin:0.8rem auto}
+.input-wrap input{width:100%;padding:0.75rem 1rem;background:rgba(232,184,75,0.07);border:1px solid rgba(232,184,75,0.22);border-radius:8px;color:#e8c170;font-size:0.95rem;text-align:center;outline:none;transition:border-color 0.3s;-webkit-appearance:none}
+.input-wrap input::placeholder{color:#4a4538;font-size:0.82rem}
+.input-wrap input:focus{border-color:rgba(232,184,75,0.5)}
+.btn{display:block;width:100%;max-width:300px;padding:0.9rem 1rem;margin:0.5rem auto;border:1px solid rgba(232,184,75,0.15);border-radius:10px;background:rgba(232,184,75,0.04);color:#c8bfb0;font-size:0.85rem;line-height:1.6;cursor:pointer;transition:all 0.3s;text-align:left;padding-left:1.1rem}
+.btn:hover{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.35);color:#e8c170}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:#e8c170;text-align:center;font-size:0.92rem;letter-spacing:0.12em;padding:0.85rem 1rem;max-width:240px}
+.btn-primary:hover{background:rgba(232,184,75,0.18)}
+.btn-ghost{background:transparent;border-color:rgba(232,184,75,0.12);color:#6a6358;text-align:center;font-size:0.85rem;letter-spacing:0.1em;padding:0.8rem 1rem;max-width:220px;opacity:0;transition:opacity 1.5s ease}
+.btn-ghost.show{opacity:1}
+.btn-ghost:hover{border-color:rgba(232,184,75,0.25);color:#8a8278}
+.act-label{font-size:0.72rem;color:#4a4538;letter-spacing:0.25em;margin-bottom:0.5rem;text-align:center;text-transform:uppercase}
+.act-title{font-size:1.15rem;color:#e8c170;font-weight:500;margin-bottom:0.3rem;text-align:center;letter-spacing:0.12em}
+.act-sub{font-size:0.78rem;color:#6a6358;margin-top:0.6rem;margin-bottom:1.5rem;text-align:center}
+.scene-text{font-size:0.92rem;line-height:2.6;color:#bfb8a8;text-align:center;white-space:pre-line;margin-bottom:1rem}
+.question{font-size:0.92rem;color:#e8dcc8;text-align:center;margin-bottom:0.8rem;font-weight:500}
+.trans-text{font-size:0.85rem;line-height:2.7;color:#5a5548;text-align:center;white-space:pre-line;font-style:italic}
+.report-wrap{width:100%;text-align:left;padding:0 0.3rem}
+.report-title{font-size:1.05rem;color:#e8c170;text-align:center;margin-bottom:0.25rem;letter-spacing:0.1em}
+.report-sub{font-size:0.75rem;color:#5a5548;text-align:center;margin-bottom:1.2rem}
+.report-section{margin-bottom:1.2rem}
+.report-section h3{font-size:0.8rem;color:#e8c170;margin-bottom:0.5rem;letter-spacing:0.05em}
+.report-section p{font-size:0.85rem;color:#bfb8a8;line-height:1.85}
+.color-bar{display:flex;align-items:center;margin:0.35rem 0;font-size:0.78rem}
+.color-bar .dot{width:7px;height:7px;border-radius:50%;margin-right:7px;flex-shrink:0}
+.color-bar .name{width:62px;flex-shrink:0;color:#8a8278}
+.color-bar .bar-bg{flex:1;height:5px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;margin:0 7px}
+.color-bar .bar-fill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.color-bar .pct{width:34px;text-align:right;color:#5a5548;font-size:0.72rem}
+.tag-row{display:flex;align-items:center;margin:0.4rem 0;gap:10px}
+.tag-box{display:inline-block;padding:0.3rem 0.7rem;border-radius:6px;background:rgba(255,255,255,0.04);font-size:0.8rem;font-weight:500;letter-spacing:0.05em;flex-shrink:0}
+.tag-desc{font-size:0.82rem;color:#7a7568;line-height:1.5}
+.copy-btn{display:inline-block;padding:0.4rem 1rem;border:1px solid rgba(232,184,75,0.3);border-radius:6px;background:rgba(232,184,75,0.08);color:#e8c170;font-size:0.78rem;cursor:pointer;margin-top:0.5rem;letter-spacing:0.05em}
+.copy-btn:active{background:rgba(232,184,75,0.2)}
+.hl{color:#e8c170;font-size:1.05em;font-weight:500}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+function stripP(s){
+  return s.replace(/[\u3002\uff0c\u3001\uff1b\uff01\u2014\u2026\u300a\u300b\u201c\u201d\u2018\u2019\uff08\uff09\u3010\u3011.,;!?~\-—\u00b7\u30fb\u2022]/g,'');
+}
+function hl(s){
+  return s.replace(/\*\*([\s\S]+?)\*\*/g,'<span class="hl">$1</span>');
+}
+function fmt(s){
+  return hl(stripP(s));
+}
+
+const DATA=[
+{id:'open',moon:'🌗',title:'人生状态显影',groups:[
+'有时候\n我们不是突然累的\n不是突然不快乐的\n也不是突然找不到自己的',
+'今天\n你会走进一个很短的故事\n看看最近的你\n正在哪里',
+'留下一个名字\n等故事结束\n把痕迹还给你'
+],input:true,btn:'我想看看'},
+
+{id:'s1',act:'第一幕',actTitle:'一直在撑',actSub:'有些东西，不是突然漏掉的。',body:'今天又是一个普通的周三\n\n闹钟响的时候，你没有立刻起身\n不是困，就是……**提不起劲**\n\n你躺在床上看着天花板\n脑子里过了一下今天的事——\n好像都做得了\n但又好像什么都不想做',q:'你起身了吗？',opts:['A 起了。习惯性地就起来了，哪有工夫想这些','B 赖了一会儿。心里有个声音说"再躺一分钟"，但最后还是起来了','C 翻了个身。今天好像特别不想起来，就多躺了一会儿，什么也没想']},
+
+{id:'s2',body:'你坐下来了\n手机亮了，消息一条接一条\n\n有人问你意见，有人等你回复\n有人的情绪等着你接住\n你打字的手没停过\n\n有个声音在心里冒了一下——\n很轻，但你听见了',q:'那个声音在说什么？',opts:['A "忙完这阵就好了"然后你继续打字','B "也没什么事，就是有点烦"你叹了口气，还是接着回','C "**我好像一直这样**"你停了一下，但下一秒又有人找你了']},
+
+{id:'s3',body:'下午三点\n你忽然有一瞬间走神了\n\n不是想什么大事\n就是忽然觉得——\n日子明明照常过着\n可心里总有一种：**哪里不太对了**',q:'你做了什么？',opts:['A 摇摇头继续忙。没空想这些，手头的事还一堆','B 愣了一下。想了一下，但很快被下一件事拉走了','C 停了一会儿。坐在那里，什么也没做。就安静了一会儿']},
+
+{id:'t1',trans:'画面渐暗\n你坐在那里。周围一切照常\n但你知道——\n**有什么东西，在慢慢漏**',btn:'往下看看'},
+
+{id:'s4',act:'第二幕',actTitle:'没说出口',actSub:'有些话，在心里放了很久。',body:'晚上\n你和朋友/家人坐在一起\n\n她说了句什么，语气不太对\n你心里其实有话\n但你犹豫了',q:'你说了吗？',opts:['A 没说。算了，说了也没用。你把话咽下去了，笑着转移了话题','B 说了一点。但她的反应让你觉得，好像不该说。你退回去了','C 你试了。认认真真地说了。但她没接住。你突然就不想再说了']},
+
+{id:'s5',body:'你一直在照顾别人\n照顾关系。照顾情绪\n好像什么时候开始——\n别人不开心，你比谁都急\n**你自己的事，反而一拖再拖**\n\n有一天你回头看了看自己',q:'你看见了什么？',opts:['A "我挺好的"你给自己打了个圆场。但你心里知道，不太好','B "我好像一直在让步"你突然意识到，最先退的那个人，总是你','C "**我呢？**"这三个字冒出来的时候，你自己都愣了一下']},
+
+{id:'s6',body:'深夜\n你打开对话框，打了一段话\n\n写了删，删了写\n最后——',q:'你发出了吗？',opts:['A 删掉了。有什么好说的。你关了手机，翻了个身','B 发了一句很轻的话。不是你最想说的那句，但至少你试了一下','C 发了。等了一会儿，没有回应。你盯着屏幕，慢慢把手机扣过去了']},
+
+{id:'t2',trans:'那些话，在心里反复想过很多遍\n可最后，还是没说出口\n不是不想说\n是说了太多次——\n**好像也没人真的听见**',btn:'再往前一点'},
+
+{id:'s7',act:'第三幕',actTitle:'停下来以后',actSub:'原来自己一直站在那里。',body:'某个周末的下午\n没什么特别的事\n你坐在那里，什么也没干\n\n好像很久没有这样——\n不赶时间，不等消息，**不想明天**',q:'你坐得住吗？',opts:['A 坐了一会儿，就开始想事了。脑子停不下来，总觉得自己该干点什么','B 坐了一会儿。有点不习惯，但好像……还行。有一点松了','C 就坐着。什么也没想。风吹过来的时候，你突然觉得——好像能喘口气了']},
+
+{id:'s8',body:'你开始慢慢想起一些事\n有些是你该管的\n有些——好像从来就不是你的\n\n别人的情绪、别人的期待、别人没解决的问题\n不知道什么时候\n**都变成了你背着的东西**',q:'你放下了吗？',opts:['A 没有。放不下。万一呢？万一我不扛就没人扛了呢','B 试了一下。松了一点点。但手还是搭着，没完全放','C 有件事，你终于说了句"这个我来不了"。说出来的时候，自己都松了口气']},
+
+{id:'t3',trans:'不是变好了\n也不是想通了\n只是——\n好像，终于能坐下来了\n**有些事，不用全都是自己的**\n\n你没有解决什么\n也没有变得更厉害\n只是终于停下来\n看见了那个一直被你落在后面的人',btn:'坐一会儿'},
+
+{id:'s9',act:'第四幕',actTitle:'有一点光',actSub:'光来的时候，通常没有声音。',body:'最近也不知道怎么回事\n也没发生什么特别好的事\n但你发现——\n\n**肩膀好像没那么紧了**',q:'你注意到了吗？',opts:['A 没有。你还在赶路，没空注意这些','B 好像……是松了一点？你摸了摸自己的肩膀，确实没那么硬了','C 你停下来，深吸了一口气。好久没这样呼吸过了']},
+
+{id:'s10',body:'你走在路上\n风过来了\n太阳出来了\n\n不知道为什么\n**今天感觉到了**',q:'感觉到了什么？',opts:['A 天气不错。你加快了脚步，还有事要办','B 好像……比前几天好一点。你也说不清哪里好，但确实好了一点','C 你停下来，闭上眼睛，让风吹了一会儿。你突然发现——你已经很久没有感受过风了']},
+
+{id:'s11',body:'某个瞬间，你笑了\n\n也不是什么大事\n就是——**笑了**',q:'那个笑是什么？',opts:['A 客气的。习惯性的。别人说了一句什么，你自然就笑了','B 有那么一点真。说不上来为什么，但嘴角确实动了','C 你愣了一下。因为这个笑——你好像很久没有过了。有点陌生，但不讨厌']},
+
+{id:'t4',trans:'问题还在\n日子也没突然变轻\n可心里，好像没那么黑了\n**不是变强了**\n**只是——有点暖了**',btn:'看见那束光'},
+
+{id:'s12',act:'第五幕',actTitle:'原来还在',actSub:'不是变好了，是认出来了。',body:'有一天\n很普通的一天\n\n你做了一件事——\n不是什么大事\n但你回头一看，发现——\n\n**这次，你好像没有先替别人想**',q:'你怎么看这件事？',opts:['A "没什么特别的吧"你没觉得这是什么事。但确实，有点不一样','B "好像……我变了？"你不确定，但隐约觉得哪里不同了','C 你回头看了一眼。突然发现——**你已经在变回自己了**。不是故意的，但就是发生了']},
+
+{id:'t5',trans:'有一天你笑了\n然后愣了一下\n——那个笑，好熟悉\n\n**原来，\n一直都在**\n\n故事到这里\n你才发现\n一路上你找的\n从来不是答案\n**而是自己**',btn:'看看留下了什么'},
+
+{id:'bridge1',body:'故事结束了\n\n但你应该已经发现——\n刚刚那些选择\n好像并不是在选故事里的人\n而是在选**自己**\n\n有些地方，你停顿了一下\n有些句子，你看了很久\n有些画面，甚至让你想起了什么\n\n其实——\n**那些地方，\n就是你正在发生的地方**',btn:'再看看'},
+
+{id:'bridge2',body:'我们把这些痕迹\n留了下来\n\n接下来\n你会看见一份\n属于此刻的显影',btn:'看见我的显影'},
+
+{id:'report'},
+
+{id:'unlock',body:'你的显影已经完成\n\n但有一件事\n系统暂时无法告诉你\n\n你的状态为什么会走到这里\n以及——\n**你最有可能出现的下一张牌**',btn:'再聊一会儿'},
+
+{id:'wechat',body:'有些人走到这里\n会突然想看看\n\n**我为什么会停在这里？**\n\n如果我继续往前走\n**下一张牌会是什么？**',wx:'SL2025V'}
+];
+
+const VM=[
+{A:{F:2},B:{F:1,G:1},C:{G:2}},
+{A:{F:2},B:{F:1,B:1},C:{B:2}},
+{A:{F:2},B:{G:1},C:{G:2,L:1}},
+{A:{B:2},B:{B:1,G:1},C:{B:2,L:1}},
+{A:{F:1,B:1},B:{B:2},C:{B:1,G:1}},
+{A:{B:2,F:1},B:{B:1,L:1},C:{B:2,A:1}},
+{A:{F:1},B:{G:2},C:{G:2,L:1}},
+{A:{F:1,B:1},B:{G:2},C:{G:1,A:2}},
+{A:{F:2},B:{L:2},C:{L:2,G:1}},
+{A:{F:1},B:{L:2},C:{L:2,A:1}},
+{A:{F:1,B:1},B:{L:2},C:{L:1,A:2}},
+{A:{F:1},B:{A:2},C:{A:2,L:1}}
+];
+
+const RP={
+FLOW:{pos:'你正在薇流期',exp:'你一直在撑。不是不想停，是停不下来。消耗从很久以前就开始了，只是你一直在往前赶，没来得及回头看。',light:'光不在远方。光在你终于停下来的那一刻。你不需要先变好才能休息，你只需要先停下来。',one:'你已经撑了很久了。允许自己不撑，也是一种力量。'},
+BOND:{pos:'你正在薇连期',exp:'你一直在照顾关系，照顾别人的感受。好像什么时候开始，你最先退的那一步，变成了习惯。',light:'光不在"被理解"里。光在你终于允许自己说不出口的那一刻。',one:'你一直在照顾别人。也许现在，轮到你被看见一次了。'},
+GROUND:{pos:'你正在薇稳期',exp:'你没有解决什么。也没有变得更厉害。只是终于停下来，看见了那个一直被你落在后面的人。',light:'你已经在回来了。不是回到过去，是回到自己。',one:'不是变好了。是终于坐下来了。而坐下来，就已经是开始。'},
+LIGHT:{pos:'你正在薇光期',exp:'光已经在了。不是突然亮起来的，是很久以前就有的，只是你一直在赶路，没注意到。',light:'光不在终点。光就在你开始能感受到风的那一刻。',one:'你已经不在最暗的地方了。虽然问题还在，但你，也在。'},
+ASCENT:{pos:'你正在薇生期',exp:'你已经在变了。不是突然变好的，是慢慢地、自己都没注意地，开始往回走了。',light:'你已经是光了。下一步不是找到光，是让光继续走。',one:'原来，一直都在。你找的从来不是答案，而是自己。'}
+};
+
+const CN={FLOW:'薇流',BOND:'薇连',GROUND:'薇稳',LIGHT:'薇光',ASCENT:'薇生'};
+const CD={FLOW:'生命能量正在流失的阶段',BOND:'关系连接正在消耗你的阶段',GROUND:'重新回到自己的阶段',LIGHT:'光正在慢慢回来的阶段',ASCENT:'生命力重新开始生长的阶段'};
+const CC={FLOW:'#e88a8a',BOND:'#e8a0bf',GROUND:'#8ac8a0',LIGHT:'#e8c170',ASCENT:'#b8a0d8'};
+const KEYS=['FLOW','BOND','GROUND','LIGHT','ASCENT'];
+const VMAP={F:'FLOW',B:'BOND',G:'GROUND',L:'LIGHT',A:'ASCENT'};
+
+let choices=[];
+let userName='';
+let step=0;
+
+function calc(){
+  let sc={FLOW:0,BOND:0,GROUND:0,LIGHT:0,ASCENT:0};
+  choices.forEach((c,i)=>{
+    if(i<VM.length){
+      const m=VM[i][c];
+      if(m) for(let k in m){const fk=VMAP[k]||k;if(sc[fk]!==undefined)sc[fk]+=m[k]}
+    }
+  });
+  let total=KEYS.reduce((s,k)=>s+sc[k],0);
+  if(total===0&&choices.length>0){KEYS.forEach(k=>sc[k]=1);total=KEYS.length}
+  const pct={};KEYS.forEach(k=>pct[k]=Math.round(sc[k]/total*100));
+  const sorted=KEYS.slice().sort((a,b)=>sc[b]-sc[a]);
+  return{sc,pct,primary:sorted[0],secondary:sorted[1],isTr:Math.abs(sc[sorted[0]]-sc[sorted[1]])<=2};
+}
+
+function makeReport(){
+  const r=calc();
+  const name=userName||'你';
+  const rp=RP[r.primary];
+  // 上报数据到飞书多维表格
+  try{submitData(r,name)}catch(e){}
+  let bars='';
+  KEYS.forEach(k=>{
+    bars+=`<div class="color-bar"><div class="dot" style="background:${CC[k]}"></div><div class="name">${CN[k]}</div><div class="bar-bg"><div class="bar-fill" style="width:${r.pct[k]}%;background:${CC[k]}"></div></div><div class="pct">${r.pct[k]}%</div></div>`;
+  });
+  if(r.isTr){
+    const rs=RP[r.secondary];
+    return `<div class="report-wrap">
+<div class="report-title">🌗 你的人生状态显影</div>
+<div class="report-sub">你现在所在的位置，以及正在回来的方向</div>
+<div class="divider"></div>
+<p style="text-align:center;color:#bfb8a8;line-height:2;margin:0.8rem 0">${name}，这是你此刻的显影</p>
+<div class="report-section"><h3>你的状态正在过渡</h3><p>此刻的你，似乎正站在两个阶段之间<br>一部分的你，${CD[r.primary]}<br>另一部分的你，${CD[r.secondary]}</p></div>
+<div class="report-section"><h3>在人生状态显影系统里</h3>
+<div class="tag-row"><span class="tag-box" style="color:${CC[r.primary]}">${CN[r.primary]} ${r.primary}</span><span class="tag-desc">${CD[r.primary]}</span></div>
+<div class="tag-row"><span class="tag-box" style="color:${CC[r.secondary]}">${CN[r.secondary]} ${r.secondary}</span><span class="tag-desc">${CD[r.secondary]}</span></div>
+</div>
+<div class="report-section"><h3>你的能量结构</h3>${bars}</div>
+<div class="report-section"><h3>一句话看见</h3><p style="color:#e8c170">${rp.one}</p><p style="margin-top:0.5rem">同时——</p><p style="color:#e8c170">${rs.one}</p></div>
+<p style="text-align:center;color:#5a5548;font-size:0.78rem;margin-top:0.8rem">你不在某个固定的位置。你正在经过。</p>
+</div>`;
+  }
+  return `<div class="report-wrap">
+<div class="report-title">🌗 你的人生状态显影</div>
+<div class="report-sub">你现在所在的位置，以及正在回来的方向</div>
+<div class="divider"></div>
+<p style="text-align:center;color:#bfb8a8;line-height:2;margin:0.8rem 0">${name}，这是你此刻的显影</p>
+<div class="report-section"><h3>1 你的当前状态</h3><p style="color:#e8c170">${fmt(rp.pos)}</p><p style="margin-top:0.3rem">${fmt(rp.exp)}</p></div>
+<div class="report-section"><h3>2 你的能量结构</h3>${bars}</div>
+<div class="report-section"><h3>3 光从哪里来</h3><p>${fmt(rp.light)}</p></div>
+<div class="report-section"><h3>4 一句话看见</h3><p style="color:#e8c170;font-size:0.95rem">${fmt(rp.one)}</p></div>
+</div>`;
+}
+
+function go(idx){
+  const app=document.getElementById('app');
+  const d=DATA[idx];
+  let h='';
+
+  if(d.id==='open'){
+    let groupsHtml=d.groups.map(g=>`<div class="text-group"><div class="text">${fmt(g)}</div></div>`).join('');
+    h=`<div class="scene active" data-i="${idx}">
+<div class="moon">${d.moon}</div>
+<div class="title">${d.title}</div>
+<div class="divider"></div>
+${groupsHtml}
+<div class="input-wrap"><input type="text" id="ni" placeholder="留下你的名字" maxlength="20"></div>
+<button class="btn btn-primary" onclick="doStart()">${d.btn}</button>
+</div>`;
+  }else if(d.id==='report'){
+    h=`<div class="scene active" data-i="${idx}" style="justify-content:flex-start;padding-top:2.5rem">
+<div class="divider"></div>
+${makeReport()}
+<div style="height:1.5rem"></div>
+<button class="btn btn-primary" onclick="go(step+1)">继续显影</button>
+<div style="height:2.5rem"></div>
+</div>`;
+  }else if(d.id==='bridge1'){
+    h=`<div class="scene active" data-i="${idx}">
+<div class="divider"></div>
+<div class="scene-text">${fmt(d.body)}</div>
+<button class="btn btn-primary" onclick="go(step+1)">${d.btn}</button>
+</div>`;
+  }else if(d.id==='bridge2'){
+    h=`<div class="scene active" data-i="${idx}">
+<div class="divider"></div>
+<div class="scene-text">${fmt(d.body)}</div>
+<button class="btn btn-primary" onclick="go(step+1)">${d.btn}</button>
+</div>`;
+  }else if(d.id==='unlock'){
+    h=`<div class="scene active" data-i="${idx}">
+<div class="divider"></div>
+<div class="scene-text">${fmt(d.body)}</div>
+<button class="btn btn-primary" onclick="go(step+1)">${d.btn}</button>
+</div>`;
+  }else if(d.id==='wechat'){
+    h=`<div class="scene active" data-i="${idx}">
+<div class="divider"></div>
+<div class="scene-text">${fmt(d.body)}</div>
+<div style="height:2rem"></div>
+<div class="divider"></div>
+<p style="color:#5a5548;font-size:0.75rem;text-align:center;margin:0.5rem 0;letter-spacing:0.05em">打开微信 搜索添加</p>
+<p style="color:#e8c170;font-size:1.05rem;letter-spacing:0.15em;margin:0.4rem 0;text-align:center;font-weight:500">${d.wx}</p>
+<button class="copy-btn" onclick="copyWx()">复制微信号</button>
+<p style="color:#3a3530;font-size:0.7rem;text-align:center;margin-top:1.5rem;letter-spacing:0.08em">薇光跃迁显影师 · 等你</p>
+</div>`;
+  }else if(d.trans!==undefined){
+    const btnId='tb_'+idx;
+    h=`<div class="scene active" data-i="${idx}">
+<div class="divider"></div>
+<div class="trans-text">${fmt(d.trans)}</div>
+<div style="height:1.5rem"></div>
+<button class="btn-ghost" id="${btnId}" onclick="go(step+1)">${d.btn||'继续'}</button>
+</div>`;
+    setTimeout(()=>{const b=document.getElementById(btnId);if(b)b.classList.add('show')},2800);
+  }else{
+    let head='';
+    if(d.act) head=`<div class="act-label">${d.act}</div><div class="act-title">${d.actTitle}</div><div class="divider"></div><div class="act-sub">${fmt(d.actSub)}</div>`;
+    else head=`<div class="divider"></div>`;
+    let opts=d.opts.map((o,i)=>`<button class="btn" onclick="doChoose('${String.fromCharCode(65+i)}')">${fmt(o)}</button>`).join('');
+    h=`<div class="scene active" data-i="${idx}">
+${head}
+<div class="scene-text">${fmt(d.body)}</div>
+<div class="question">${fmt(d.q)}</div>
+${opts}
+</div>`;
+  }
+
+  const old=app.querySelector('.scene.active');
+  if(old){old.classList.remove('active');old.classList.add('exit');setTimeout(()=>old.remove(),900)}
+  app.insertAdjacentHTML('beforeend',h);
+  step=idx;
+}
+
+function doStart(){
+  const inp=document.getElementById('ni');
+  const v=inp?inp.value.trim():'';
+  if(!v){inp.style.borderColor='rgba(232,100,75,0.6)';inp.placeholder='请留下你的名字';return}
+  userName=v;
+  go(1);
+}
+
+function doChoose(c){
+  choices.push(c);
+  go(step+1);
+}
+
+function copyWx(){
+  const t='SL2025V';
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>showCopyOk())}
+  else{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showCopyOk()}
+}
+function showCopyOk(){
+  const b=document.querySelector('.copy-btn');
+  if(b){b.textContent='已复制 ✓';setTimeout(()=>{b.textContent='复制微信号'},1500)}
+}
+
+function submitData(r,name){
+  const payload={
+    "用户姓名":name,
+    "选择序列":choices.join(','),
+    "主状态":CN[r.primary]+' '+r.primary,
+    "副状态":CN[r.secondary]+' '+r.secondary,
+    "是否过渡":r.isTr?'是':'否',
+    "薇流FLOW":r.pct.FLOW,
+    "薇连BOND":r.pct.BOND,
+    "薇稳GROUND":r.pct.GROUND,
+    "薇光LIGHT":r.pct.LIGHT,
+    "薇生ASCENT":r.pct.ASCENT
+  };
+  fetch('https://lark-cli-proxy.vercel.app/api/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
+go(0);
+</script>
+</body>
+</html>
