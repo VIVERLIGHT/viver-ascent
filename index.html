@@ -62,6 +62,15 @@ body{background:linear-gradient(180deg,#0d0d1a 0%,#1a1a2e 30%,#16213e 100%);colo
 .hidden{display:none}
 .toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:rgba(232,184,75,0.12);color:#e8c170;padding:0.6rem 1.4rem;border-radius:8px;font-size:0.78rem;letter-spacing:0.05em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;opacity:0;transition:opacity 0.4s;pointer-events:none;border:1px solid rgba(232,184,75,0.15)}
 .toast.show{opacity:1}
+.action-group{width:100%;max-width:280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:0.3rem}
+.action-btn{display:block;width:100%;padding:0.75rem 1rem;border:1px solid rgba(232,184,75,0.25);border-radius:10px;background:rgba(232,184,75,0.06);color:#e8c170;font-size:0.88rem;letter-spacing:0.1em;cursor:pointer;transition:all 0.3s;text-align:center}
+.action-btn:hover{background:rgba(232,184,75,0.12);border-color:rgba(232,184,75,0.4)}
+.action-btn:active{transform:scale(0.98)}
+.action-btn.secondary{border-color:rgba(232,184,75,0.15);color:#9a9288;font-size:0.82rem}
+.action-btn.secondary:hover{border-color:rgba(232,184,75,0.3);color:#c8bfb0}
+.action-btn.tertiary{border-color:rgba(232,184,75,0.1);color:#6a6358;font-size:0.78rem;background:transparent}
+.action-btn.tertiary:hover{border-color:rgba(232,184,75,0.2);color:#8a8278}
+.action-sub{color:#5a5548;font-size:0.68rem;text-align:center;margin-bottom:0.8rem;letter-spacing:0.06em;line-height:1.6}
 </style>
 </head>
 <body>
@@ -277,7 +286,14 @@ ${groupsHtml}
 <div class="divider"></div>
 ${makeReport()}
 <div style="height:1.5rem"></div>
-<button class="btn btn-primary" onclick="go(step+1)">继续显影</button>
+<div class="action-group">
+<button class="action-btn" onclick="saveReport()">🌗 保存这一刻</button>
+<div class="action-sub">这一页属于此刻的你</div>
+<button class="action-btn secondary" onclick="go(step+1)">继续显影</button>
+<div class="action-sub">看看这些痕迹 为什么会出现在你的生命里</div>
+<button class="action-btn tertiary" onclick="restartExperience()">再走一次这段路</button>
+<div class="action-sub">当状态改变 选择也会改变</div>
+</div>
 <div style="height:2.5rem"></div>
 </div>`;
   }else if(d.id==='bridge1'){
@@ -309,7 +325,10 @@ ${makeReport()}
 <button class="copy-btn" onclick="copyWx()">复制微信号</button>
 <div style="height:0.5rem"></div>
 <button class="share-btn" onclick="shareLink()">送TA一次看见自己的机会</button>
-<p style="color:#3a3530;font-size:0.7rem;text-align:center;margin-top:1.5rem;letter-spacing:0.08em">薇光跃迁显影师 · 等你</p>
+<div style="height:1.5rem"></div>
+<button class="action-btn tertiary" onclick="restartExperience()" style="max-width:240px">再走一次这段路</button>
+<p style="color:#3a3530;font-size:0.68rem;text-align:center;margin-top:1rem;letter-spacing:0.06em;line-height:1.7">第一次选择 记录的是最真实的当下<br>再次进入 或许会看见新的自己</p>
+<p style="color:#3a3530;font-size:0.7rem;text-align:center;margin-top:1.2rem;letter-spacing:0.08em">薇光跃迁显影师 · 等你</p>
 </div>`;
   }else if(d.trans!==undefined){
     const btnId='tb_'+idx;
@@ -322,7 +341,7 @@ ${makeReport()}
     setTimeout(()=>{const b=document.getElementById(btnId);if(b)b.classList.add('show')},3600);
   }else{
     let head='';
-    if(d.act) head=`<div class="act-label">${d.act}</div><div class="act-title">${d.actTitle}</div><div class="divider"></div><div class="act-sub">${fmt(d.actSub)}</div>`;
+    if(d.act) head=`<div class="act-label">${d.act}</div><div class="act-title">${d.actTitle}</div><div class="divider"></div><div class="act-sub">${fmt(d.actSub)}</div><div style="height:0.6rem"></div><div class="divider"></div>`;
     else head=`<div class="divider"></div>`;
     let opts=d.opts.map((o,i)=>`<button class="btn" onclick="doChoose('${String.fromCharCode(65+i)}')">${fmt(o)}</button>`).join('');
     h=`<div class="scene active" data-i="${idx}">
@@ -330,7 +349,7 @@ ${head}
 <div class="scene-text">${fmt(d.body)}</div>
 <div class="question">${fmt(d.q)}</div>
 ${opts}
-<p style="color:#6a6358;font-size:0.72rem;text-align:center;margin-top:1.2rem;letter-spacing:0.1em">第一感觉 往往比答案更诚实</p>
+<p style="color:#6a6358;font-size:0.72rem;text-align:center;margin-top:1.2rem;letter-spacing:0.1em;line-height:1.8">不必寻找正确答案<br>你最先选中的 往往就是此刻的自己</p>
 </div>`;
   }
 
@@ -375,6 +394,18 @@ function fallbackCopy(text){
   const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
   document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
   showToast('链接已复制 去微信发给朋友吧 ✨',2500);
+}
+
+function saveReport(){
+  showToast('请截图保存这一刻 ✨',2500);
+}
+
+function restartExperience(){
+  choices=[];
+  userName='';
+  step=0;
+  document.getElementById('app').innerHTML='';
+  go(0);
 }
 
 function submitData(r,name){
